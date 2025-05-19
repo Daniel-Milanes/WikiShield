@@ -21,7 +21,7 @@ repos:
 
   # nbQA to run tools on Jupyter notebooks
   - repo: https://github.com/nbQA-dev/nbQA
-    rev: 1.7.0
+    rev: 1.9.1
     hooks:
       - id: nbqa-black
       - id: nbqa-flake8
