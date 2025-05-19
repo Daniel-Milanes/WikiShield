@@ -1,0 +1,28 @@
+repos:
+  # Black for formatting .py files
+  - repo: https://github.com/psf/black
+    rev: 23.3.0
+    hooks:
+      - id: black
+
+  # Flake8 for linting .py files
+  - repo: https://github.com/pycqa/flake8
+    rev: 6.0.0
+    hooks:
+      - id: flake8
+
+  # Basic cleanup hooks (trailing spaces, missing newlines, etc.)
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-added-large-files
+
+  # nbQA to run tools on Jupyter notebooks
+  - repo: https://github.com/nbQA-dev/nbQA
+    rev: 1.7.0
+    hooks:
+      - id: nbqa-black
+      - id: nbqa-flake8
+        args: ["--ignore=E203,W291"]  # Optional: skip some warnings often triggered by notebooks
