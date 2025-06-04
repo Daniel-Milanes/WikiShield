@@ -8,7 +8,7 @@ dependencies:
   - ncurses=6.4
   - openssl=3.0.16
   - pip=25.1
-  - python=3.10.16
+  - python>=3.11.12
   - readline=8.2
   - setuptools=78.1.1
   - sqlite=3.45.3
@@ -17,6 +17,17 @@ dependencies:
   - wheel=0.45.1
   - xz=5.6.4
   - zlib=1.2.13
+  - jupyter 
+  - matplotlib >= 3.8
+  - openpyxl >= 3.0
+  - pandas >= 2.0
+  - pyarrow 
+  - py-xgboost
+  - scikit-learn >= 1.4
+  - sqlalchemy
+  - xgboost = 2.1.4
+  - pmdarima >= 2.0
+  - interpret
   - pip:
       - asttokens==3.0.0
       - autopep8==2.3.2
@@ -58,3 +69,6 @@ dependencies:
       - virtualenv==20.31.2
       - wcwidth==0.2.13
       - requests==2.32.3
+      - wikipedia-api==0.8.1
+      - plotly == 5.24.0
+      - seaborn == 0.13.2
