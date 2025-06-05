@@ -17,5 +17,5 @@ Targets
 
 Model type 
         
-        Main: Classification using XGBoost and Optuna
-        Compare performance of XGBoost with KNN and Baseline Logistic Regression
+    Main: Classification using XGBoost and Optuna
+    Compare performance of XGBoost with KNN and Baseline Logistic Regression
