@@ -7,4 +7,4 @@ __pycache__/
 .ipynb_checkpoints/
 .vscode/
 Data/Daniel/train-edits.xml
-Data/Samarth/pan-wikipedia-vandalism-corpus-2010/article-revisions/
+Source-data/pan-wikipedia-vandalism-corpus-2010/article-revisions/
