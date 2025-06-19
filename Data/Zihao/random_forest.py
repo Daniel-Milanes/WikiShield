@@ -81,6 +81,13 @@ for train_index, test_index in kfold.split(df_train):
     acc = np.array([accuracy_score(df_ho.isvandalism, tree_pred),  accuracy_score(df_ho.isvandalism, rf_pred), accuracy_score(df_ho.isvandalism, et_pred)])
     accs = accs + acc
 
+    score_df = pd.DataFrame({'feature':df_tt[["user_warns", "num_recent_reversions", "num_edits_5d_before", "is_person"]].columns,
+                            'importance_score': rf.feature_importances_})
+
+    score_df.sort_values('importance_score',ascending=False)
+    print(score_df)
+    
+
     i = i + 1
 
 accs = accs / num_splits
