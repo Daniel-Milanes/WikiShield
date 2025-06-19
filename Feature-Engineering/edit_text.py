@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-""" Provides helper function _word_counter that counts words in added_lines and deleted_lines, and _comment_emptyTo be used in a FunctionGenerator """
+""" Provides helper function _word_counter that counts words in added_lines and
+    deleted_lines, and _comment_empty. To be used in a FunctionGenerator """
 import pandas as pd
 from sys import argv
 
