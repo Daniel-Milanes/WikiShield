@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """ Provides helper function _word_counter that counts words in added_lines and
-    deleted_lines, and _comment_empty. To be used in a FunctionGenerator """
+    deleted_lines, and _comment_empty. To be used in a FunctionGenerator
+"""
 import pandas as pd
 from sys import argv
 
@@ -12,15 +13,17 @@ def _wc(str) -> int:
         return len(str.split())
 
 def _word_counter(data : pd.DataFrame) -> pd.DataFrame:
-    """ Helper function for FunctionTransformer. Counts words in added and deleted lines"""
-    data['added_word_count'] = data['added_lines'].map(_wc)
-    data['deleted_word_count'] = data['deleted_lines'].map(_wc)
-    return data
+    """ Helper function for FunctionTransformer. Counts words in added and 
+        deleted lines, adds two more columns.
+    """
+    return pd.concat([data, data[['added_lines']].map(_wc).rename(columns={'added_lines': 'added_word_count'}), data[['deleted_lines']].map(_wc).rename(columns={'deleted_lines': 'deleted_word_count'})], axis = 1)
 
 def _comment_empty(data : pd.DataFrame) -> pd.DataFrame:
-    """ Helper function for FunctionTransformer. Checks if comment is empty"""
-    data['comment_empty'] = data['comment'].isna()
-    return data
+    """ Helper function for FunctionTransformer. Checks if comment is empty, 
+        adds column.
+    """
+    return pd.concat([data, data[['comment']].isna().rename(columns={'comment': 'comment_empty'})], axis=1)
+
 
 
 if __name__ == '__main__':
