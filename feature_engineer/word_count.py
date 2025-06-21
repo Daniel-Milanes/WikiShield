@@ -4,7 +4,7 @@ import pandas as pd
 
 def word_count(row: pd.Series) -> tuple[int, int]:
     """
-    Count the number of words in the 'added_line' and 
+    Count the number of words in the 'added_line' and
     'deleted_line' fields of a DataFrame row.
 
     This function:
@@ -14,7 +14,7 @@ def word_count(row: pd.Series) -> tuple[int, int]:
     - Counts all words
 
     Parameters:
-        row (pandas.Series): A row from a DataFrame containing 
+        row (pandas.Series): A row from a DataFrame containing
         'added_line' and 'deleted_line' keys.
 
     Returns:

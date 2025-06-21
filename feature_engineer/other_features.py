@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-"""Provides feature engineering functions for features other than edit text: 
-    currently, whether user is an IP."""
+"""Provides feature engineering functions for features other than edit text:
+currently, whether user is an IP."""
 
 import pandas as pd
 import re
