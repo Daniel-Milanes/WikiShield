@@ -22,4 +22,4 @@ repos:
     hooks:
       - id: nbqa-black
       - id: nbqa-flake8
-        args: ["--ignore=E203,W291"]
+        args: ["--ignore=E203,W291,E402"]
