@@ -4,35 +4,36 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, root_mean_squared_error
-from sklearn.model_selection import train_test_split, KFold
+from sklearn.model_selection import train_test_split, StratifiedKFold
 
 
+df_train = pd.read_csv("train.csv")
 
-df_train = pd.read_csv("train_data_with_editcounts_isperson.csv")
+features = ["user_edit_count", "user_warns", "num_recent_reversions", "num_edits_5d_before", "is_person"]
 
 num_splits = 5
 num_models = 4
-kfold = KFold(num_splits, random_state=216, shuffle=True)
+kfold = StratifiedKFold(num_splits, random_state=216, shuffle=True)
 
 ## This array will hold the mse for each model and split
 rmses = np.zeros((num_models, num_splits))
 
-accs = np.zeros(3)
+accs = np.zeros(num_models)
 
 ## sets a split counter
 i = 0
 
 ## loop through the kfold here
-for train_index, test_index in kfold.split(df_train):
+for train_index, test_index in kfold.split(df_train[features], df_train.isvandalism):
     ## cv training set
     df_tt = df_train.iloc[train_index]
 
     ## cv holdout set
     df_ho = df_train.iloc[test_index]
 
-    log_reg = LogisticRegression(penalty=None)
-    log_reg.fit(df_tt[["user_warns", "num_recent_reversions", "num_edits_5d_before", "is_person"]], df_tt.isvandalism)
-    log_pred = log_reg.predict(df_ho[["user_warns", "num_recent_reversions", "num_edits_5d_before", "is_person"]])
+    log_reg = LogisticRegression(penalty=None, max_iter=500)
+    log_reg.fit(df_tt[features], df_tt.isvandalism)
+    log_pred = log_reg.predict(df_ho[features])
 
     rmses[0, i] = root_mean_squared_error(df_ho.isvandalism, log_pred)
 
@@ -42,8 +43,8 @@ for train_index, test_index in kfold.split(df_train):
         min_samples_leaf = 5, # minimum number of samples in each leaf, to prevent overfitting
         random_state= 216
         )
-    tree.fit(df_tt[["user_warns", "num_recent_reversions", "num_edits_5d_before", "is_person"]], df_tt.isvandalism)
-    tree_pred = tree.predict(df_ho[["user_warns", "num_recent_reversions", "num_edits_5d_before", "is_person"]])
+    tree.fit(df_tt[features], df_tt.isvandalism)
+    tree_pred = tree.predict(df_ho[features])
 
     rmses[1, i] = root_mean_squared_error(df_ho.isvandalism, tree_pred)
 
@@ -58,8 +59,8 @@ for train_index, test_index in kfold.split(df_train):
         random_state = 216 # for consistency
         )
     
-    rf.fit(df_tt[["user_warns", "num_recent_reversions", "num_edits_5d_before", "is_person"]], df_tt.isvandalism)
-    rf_pred = rf.predict(df_ho[["user_warns", "num_recent_reversions", "num_edits_5d_before", "is_person"]])
+    rf.fit(df_tt[features], df_tt.isvandalism)
+    rf_pred = rf.predict(df_ho[features])
 
     rmses[2, i] = root_mean_squared_error(df_ho.isvandalism, rf_pred)
 
@@ -73,15 +74,15 @@ for train_index, test_index in kfold.split(df_train):
         random_state = 216 
         )
     
-    et.fit(df_tt[["user_warns", "num_recent_reversions", "num_edits_5d_before", "is_person"]], df_tt.isvandalism)
-    et_pred = et.predict(df_ho[["user_warns", "num_recent_reversions", "num_edits_5d_before", "is_person"]])
+    et.fit(df_tt[features], df_tt.isvandalism)
+    et_pred = et.predict(df_ho[features])
 
     rmses[3, i] = root_mean_squared_error(df_ho.isvandalism, et_pred)
 
-    acc = np.array([accuracy_score(df_ho.isvandalism, tree_pred),  accuracy_score(df_ho.isvandalism, rf_pred), accuracy_score(df_ho.isvandalism, et_pred)])
+    acc = np.array([accuracy_score(df_ho.isvandalism, log_pred), accuracy_score(df_ho.isvandalism, tree_pred),  accuracy_score(df_ho.isvandalism, rf_pred), accuracy_score(df_ho.isvandalism, et_pred)])
     accs = accs + acc
 
-    score_df = pd.DataFrame({'feature':df_tt[["user_warns", "num_recent_reversions", "num_edits_5d_before", "is_person"]].columns,
+    score_df = pd.DataFrame({'feature':df_tt[features].columns,
                             'importance_score': rf.feature_importances_})
 
     score_df.sort_values('importance_score',ascending=False)
@@ -92,12 +93,14 @@ for train_index, test_index in kfold.split(df_train):
 
 accs = accs / num_splits
 
-    ## Find the avg cv mse for each model here
+print(pd.DataFrame(accs, index= ['log', 'tree', 'rf', 'et'], columns = ['avg_accuracy']))
+
+'''    
+## Find the avg cv mse for each model here
 print(f"Logistic Regression Avg. CV RMSE: {np.mean(rmses[0,:])} and STD: {np.std(rmses[0,:])}")
 print(f"Decision Tree Avg. CV MSE: {np.mean(rmses[1,:])} and STD: {np.std(rmses[1,:])}")
 print(f"Random Forest Avg. CV MSE: {np.mean(rmses[2,:])} and STD: {np.std(rmses[2,:])}")
 print(f"Extra Tree Avg. CV MSE: {np.mean(rmses[3,:])} and STD: {np.std(rmses[3,:])}")
-
-print(pd.DataFrame(accs, index= ['tree', 'rf', 'et'], columns = ['avg_accuracy']))
+'''
 
 
