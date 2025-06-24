@@ -6,5 +6,3 @@ __pycache__/
 .DS_Store
 .ipynb_checkpoints/
 .vscode/
-Data/Daniel/train-edits.xml
-Source-data/pan-wikipedia-vandalism-corpus-2010/article-revisions/
