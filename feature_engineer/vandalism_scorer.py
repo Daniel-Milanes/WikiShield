@@ -65,7 +65,7 @@ class VandalismScorer(TransformerMixin, BaseEstimator):
         split using StratifiedKFold. The remaining MultinomialNB classifier is trained on all of X.
 
         Parameters:
-            X: dataset of WP Edits. Must have the columns "added_lines" and "deleted_lines"
+            X: dataset of WP Edits. Must have the columns "added_lines", "deleted_lines" and "EditID"
             labels: Iterable of bools associated to each WP Edit. A value of True indicates vandalism.
 
         Returns:
@@ -122,7 +122,7 @@ class VandalismScorer(TransformerMixin, BaseEstimator):
         learned word probabilities.
 
         Parameters:
-            X: dataset of WP Edits, shape (n_samples, n_features). Must have the columns "added_lines" and "deleted_lines"
+            X: dataset of WP Edits, shape (n_samples, n_features). Must have the columns "added_lines", "deleted_lines" and "EditID".
             n_splits: number of splits to use for training Naive Bayes.
 
         Returns:
@@ -132,8 +132,8 @@ class VandalismScorer(TransformerMixin, BaseEstimator):
         X_transformed.reset_index(drop=True, inplace=True) # Reset index to positional index to allow accessing the scipy.spmatrix by index
         X_transformed.reset_index(inplace=True) # Store the positional index in a separate column
 
-        X_counts_added = self.vectorizer_.transform(self.X_transformed['added_lines'])
-        X_counts_deleted = self.vectorizer_.transform(self.X_transformed['deleted_lines'])
+        X_counts_added = self.vectorizer_.transform(X_transformed['added_lines'])
+        X_counts_deleted = self.vectorizer_.transform(X_transformed['deleted_lines'])
 
         # Subtract matrices and clip at 0 (we only care about added words).
         # .maximum(0) is an efficient way to do this with sparse matrices.
@@ -145,4 +145,4 @@ class VandalismScorer(TransformerMixin, BaseEstimator):
 
         X_transformed['vandalism_score'] = X_transformed[['index', 'classifier_index']].apply(lambda x: self.nb_classifiers[x['classifier_index']].predict_proba(X_counts_diff[x['index']])[:, self.nb_classifiers[x['classifier_index']].classes_].item(), axis=1)
 
-        return X_transformed.drop(['added_lines', 'deleted_lines'], axis=1)
+        return X_transformed.drop(['added_lines', 'deleted_lines', 'classifier_index', 'index', 'EditID'], axis=1)
