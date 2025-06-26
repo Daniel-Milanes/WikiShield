@@ -1,13 +1,9 @@
 import pandas as pd
-from feature_engineer import (
-    VandalismScorer,
-    is_IP,
-    account_age,
-    comment_empty,
-    word_count,
-)
-from sklearn.model_selection import StratifiedKFold
-import numpy as np
+
+from .account_age import account_age
+from .comment_empty import comment_empty
+from .is_ip import is_IP
+from .word_count import word_count
 
 
 def preprocessor(df: pd.DataFrame) -> None:
@@ -33,4 +29,3 @@ def preprocessor(df: pd.DataFrame) -> None:
     df["word_count_added"], df["word_count_deleted"] = zip(
         *df.apply(word_count, axis=1)
     )
-
