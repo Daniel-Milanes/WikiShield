@@ -38,7 +38,7 @@ class VandalismScorer(TransformerMixin, BaseEstimator):
 
     # This is a dictionary allowing to define the type of parameters.
     # It is used to validate parameters within the `_fit_context` decorator.
-    _parameter_constraints = {"smoothing": [int], "n_splits": [int], "fit_prior": [bool]}
+    _parameter_constraints = {"smoothing": [int], "n_splits": [int], "fit_prior": [bool], "random_state": [int]}
 
     def __init__(self, smoothing: int = 1, n_splits: int = 4, random_state = 42, fit_prior=False) -> None:
         """
@@ -77,7 +77,7 @@ class VandalismScorer(TransformerMixin, BaseEstimator):
     
     def transform(
         self, X
-    ) -> list[float]:
+    ) -> pd.DataFrame:
         """
         Compute vandalism scores for new edits based on
         learned word probabilities.
