@@ -54,7 +54,7 @@ class VandalismScorer(TransformerMixin, BaseEstimator):
     @_fit_context(prefer_skip_nested_validation=True)
     def fit(
         self, X, labels
-    ) -> None:
+    ):
         """
         Train the Naive Bayes classifier by building a vocabulary of all words seen.
 
@@ -90,7 +90,7 @@ class VandalismScorer(TransformerMixin, BaseEstimator):
             X_transformed: dataset of WP Edits augmented with pred_proba output from Naive Bayes, shape (n_samples, n_features+1). Adds a column called "vandalism_score".
         """
         X_transformed = X.copy().replace(np.nan, '') # In keeping with sklearn API, we don't want to directly modify the input data
-
+        
         cv = StratifiedKFold(n_splits=self.n_splits, shuffle=True, random_state=self.random_state)
 
         # X_counts_added = pd.DataFrame.sparse.from_spmatrix(self.vectorizer_.transform(X_transformed['added_lines']), columns=self.vectorizer_.vocabulary_)
@@ -108,7 +108,7 @@ class VandalismScorer(TransformerMixin, BaseEstimator):
         X_counts_diff.eliminate_zeros()
 
         # Initialize the score column to be filled during cross-validation.
-        X_transformed['vandalism_score'] = np.nan
+        # X_transformed['vandalism_score'] = np.nan
 
         nb = self.nb_
         for train_idx, target_idx in cv.split(X_transformed, self.labels_):
@@ -123,4 +123,4 @@ class VandalismScorer(TransformerMixin, BaseEstimator):
             # of predict_proba with the probabilities for True, irrespective of whether nb saw
             # True first or False first.
         
-        return X_transformed
+        return X_transformed.drop(['added_lines', 'deleted_lines'], axis=1)
