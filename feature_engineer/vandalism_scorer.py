@@ -1,5 +1,6 @@
 import re
 from collections import defaultdict
+from memory_profiler import profile
 from typing import Iterable, Set
 from sklearn.base import BaseEstimator, TransformerMixin, _fit_context
 import numpy as np
@@ -75,6 +76,7 @@ class VandalismScorer(TransformerMixin, BaseEstimator):
 
         return self
     
+    @profile
     def transform(
         self, X
     ) -> pd.DataFrame:
