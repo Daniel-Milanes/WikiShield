@@ -38,14 +38,18 @@ class VandalismScorer(TransformerMixin, BaseEstimator):
 
     # This is a dictionary allowing to define the type of parameters.
     # It is used to validate parameters within the `_fit_context` decorator.
-    _parameter_constraints = {"smoothing": [int], "n_splits": [int]}
+    _parameter_constraints = {"smoothing": [int], "n_splits": [int], "fit_prior": [bool]}
 
-    def __init__(self, smoothing: int = 1, n_splits: int = 4) -> None:
+    def __init__(self, smoothing: int = 1, n_splits: int = 4, random_state = 42, fit_prior=False) -> None:
         """
         Initialize the scorer with Laplace smoothing parameter.
         """
         self.smoothing = smoothing
         self.n_splits = n_splits
+        self.random_state = random_state
+        self.vectorizer_ = CountVectorizer()
+        self.fit_prior = fit_prior
+        self.nb_ = MultinomialNB(fit_prior=fit_prior)
 
     @_fit_context(prefer_skip_nested_validation=True)
     def fit(
@@ -67,13 +71,12 @@ class VandalismScorer(TransformerMixin, BaseEstimator):
         self.X_ = X.replace(np.nan, '')
         self.labels_ = labels
 
-        self.vectorizer_ = CountVectorizer()
         self.vectorizer_.fit(pd.concat([self.X_['added_lines'], self.X_['deleted_lines']], axis=0))
 
         return self
     
     def transform(
-        self, X, random_state=42
+        self, X
     ) -> list[float]:
         """
         Compute vandalism scores for new edits based on
@@ -88,20 +91,20 @@ class VandalismScorer(TransformerMixin, BaseEstimator):
         """
         X_transformed = X.copy().replace(np.nan, '') # In keeping with sklearn API, we don't want to directly modify the input data
 
-        cv = StratifiedKFold(n_splits=self.n_splits, shuffle=True, random_state=random_state)
+        cv = StratifiedKFold(n_splits=self.n_splits, shuffle=True, random_state=self.random_state)
 
         X_counts_added = pd.DataFrame.sparse.from_spmatrix(self.vectorizer_.transform(X_transformed['added_lines']), columns=self.vectorizer_.vocabulary_)
         X_counts_deleted = pd.DataFrame.sparse.from_spmatrix(self.vectorizer_.transform(X_transformed['deleted_lines']), columns=self.vectorizer_.vocabulary_)   
         X_counts_diff = (X_counts_added - X_counts_deleted).clip(lower=0)
 
-        nb = MultinomialNB(fit_prior=False)
+        nb = self.nb_
         for train_idx, target_idx in cv.split(X_transformed, self.labels_):
             fit_data = X_counts_diff.iloc[train_idx]
             scored_data = X_counts_diff.iloc[target_idx]
             fit_targets = self.labels_.iloc[train_idx]
 
             nb.fit(fit_data, fit_targets)
-            X_transformed.iloc[target_idx]['vandalism_score'] = nb.predict_proba(scored_data)[:, nb.classes_]
+            X_transformed.loc[X_transformed.index[target_idx], 'vandalism_score'] = nb.predict_proba(scored_data)[:, nb.classes_]
             # nb.classes_ is a list of the classes seen by nb.fit, in the order it saw them.
             # The only two class labels are True and False, so this indexing selects the column
             # of predict_proba with the probabilities for True, irrespective of whether nb saw
