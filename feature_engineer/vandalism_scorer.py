@@ -1,102 +1,113 @@
 import re
 from collections import defaultdict
 from typing import Iterable, Set
+from sklearn.base import BaseEstimator, TransformerMixin, _fit_context
+import numpy as np
+import pandas as pd
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.model_selection import StratifiedKFold
+from sklearn.naive_bayes import MultinomialNB
 
 
-class VandalismScorer:
+
+
+
+class VandalismScorer(TransformerMixin, BaseEstimator):
     """
     A simple Naive Bayes inspired scorer that estimates the probability
     that a given edit is vandalism based on the words added in that edit.
+    Implementation of class based on the template implementation given at
+    https://github.com/scikit-learn-contrib/project-template/blob/main/skltemplate/_template.py
+    (template file as of June 25, 2025)
+
+    Parameters
+    ----------
+    smoothing : int, default=1
+        Smoothing parameter for Laplace smoothing.
+    
+    Attributes
+    ----------
+    vandalism_counts_ : defaultdict(int)
+        Dictionary to store counts of words in vandalism edits.
+    constructive_counts_ : defaultdict(int)
+        Dictionary to store counts of words in constructive edits.
+    word_probs_ : dict
+        Dictionary to store probabilities of words in vandalism edits.
+    
     """
 
-    def __init__(self, smoothing: int = 1) -> None:
+    # This is a dictionary allowing to define the type of parameters.
+    # It is used to validate parameters within the `_fit_context` decorator.
+    _parameter_constraints = {"smoothing": [int], "n_splits": [int], "fit_prior": [bool]}
+
+    def __init__(self, smoothing: int = 1, n_splits: int = 4, random_state = 42, fit_prior=False) -> None:
         """
         Initialize the scorer with Laplace smoothing parameter.
         """
         self.smoothing = smoothing
-        self.vandalism_counts = defaultdict(int)
-        self.constructive_counts = defaultdict(int)
-        self.word_probs = {}
+        self.n_splits = n_splits
+        self.random_state = random_state
+        self.vectorizer_ = CountVectorizer()
+        self.fit_prior = fit_prior
+        self.nb_ = MultinomialNB(fit_prior=fit_prior)
 
-    def _get_words_added(self, added_line: str, deleted_line: str) -> Set[str]:
-        """
-        Extracts the set of words added in the edit by removing punctuation,
-        converting to lowercase, and subtracting deleted words.
-
-        Parameters:
-            added_line (str): Text of the added lines.
-            deleted_line (str): Text of the deleted lines.
-
-        Returns:
-            set: Words present in added_line but not in deleted_line.
-        """
-        added = set(re.sub(r"[^\w\s]", " ", str(added_line)).lower().split())
-        deleted = set(re.sub(r"[^\w\s]", " ", str(deleted_line)).lower().split())
-        return added - deleted
-
+    @_fit_context(prefer_skip_nested_validation=True)
     def fit(
-        self,
-        added_lines: Iterable[str],
-        deleted_lines: Iterable[str],
-        labels: Iterable[bool],
+        self, X, labels
     ) -> None:
         """
-        Train the scorer by counting word occurrences in
-        vandalism and constructive edits.
+        Train the Naive Bayes classifier by building a vocabulary of all words seen.
 
         Parameters:
-            added_lines (iterable): Iterable of added line texts.
-            deleted_lines (iterable): Iterable of deleted line texts.
-            labels (iterable): Iterable of binary labels (True if vandalism).
+            X: dataset of WP Edits. Must have the columns "added_lines" and "deleted_lines"
+            labels: Iterable of bools associated to each WP Edit. A value of True indicates vandalism.
+
+        Returns:
+            self
         """
-        for added, deleted, label in zip(added_lines, deleted_lines, labels):
-            words = self._get_words_added(added, deleted)
-            for word in words:
-                if label:
-                    self.vandalism_counts[word] += 1
-                else:
-                    self.constructive_counts[word] += 1
 
-        all_words = set(self.vandalism_counts) | set(self.constructive_counts)
-        self.word_probs = {
-            word: (self.vandalism_counts[word] + self.smoothing)
-            / (
-                self.vandalism_counts[word]
-                + self.constructive_counts[word]
-                + 2 * self.smoothing
-            )
-            for word in all_words
-        }
+        # `_validate_data` is defined in the `BaseEstimator` class.
+        # self.X_ = self._validate_data(X.replace(np.nan, ''), accept_sparse=True)
+        self.X_ = X.replace(np.nan, '')
+        self.labels_ = labels
 
-    def score(
-        self, added_lines: Iterable[str], deleted_lines: Iterable[str]
+        self.vectorizer_.fit(pd.concat([self.X_['added_lines'], self.X_['deleted_lines']], axis=0))
+
+        return self
+    
+    def transform(
+        self, X
     ) -> list[float]:
         """
         Compute vandalism scores for new edits based on
         learned word probabilities.
 
         Parameters:
-            added_lines (iterable): Iterable of added line texts.
-            deleted_lines (iterable): Iterable of deleted line texts.
+            X: dataset of WP Edits, shape (n_samples, n_features). Must have the columns "added_lines" and "deleted_lines"
+            n_splits: number of splits to use for training Naive Bayes.
 
         Returns:
-            list of float: Vandalism probability scores between 0 and 1.
+            X_transformed: dataset of WP Edits augmented with pred_proba output from Naive Bayes, shape (n_samples, n_features+1). Adds a column called "vandalism_score".
         """
-        scores = []
-        for added, deleted in zip(added_lines, deleted_lines):
-            words = self._get_words_added(added, deleted)
-            probs = [self.word_probs.get(word, 0.5) for word in words]
+        X_transformed = X.copy().replace(np.nan, '') # In keeping with sklearn API, we don't want to directly modify the input data
 
-            prod_p = 1
-            prod_1_minus_p = 1
-            for p in probs:
-                prod_p *= p
-                prod_1_minus_p *= 1 - p
+        cv = StratifiedKFold(n_splits=self.n_splits, shuffle=True, random_state=self.random_state)
 
-            score = (
-                prod_p / (prod_p + prod_1_minus_p)
-                if (prod_p + prod_1_minus_p) != 0
-                else 1
-            )
-            scores.append(score)
-        return scores
+        X_counts_added = pd.DataFrame.sparse.from_spmatrix(self.vectorizer_.transform(X_transformed['added_lines']), columns=self.vectorizer_.vocabulary_)
+        X_counts_deleted = pd.DataFrame.sparse.from_spmatrix(self.vectorizer_.transform(X_transformed['deleted_lines']), columns=self.vectorizer_.vocabulary_)   
+        X_counts_diff = (X_counts_added - X_counts_deleted).clip(lower=0)
+
+        nb = self.nb_
+        for train_idx, target_idx in cv.split(X_transformed, self.labels_):
+            fit_data = X_counts_diff.iloc[train_idx]
+            scored_data = X_counts_diff.iloc[target_idx]
+            fit_targets = self.labels_.iloc[train_idx]
+
+            nb.fit(fit_data, fit_targets)
+            X_transformed.loc[X_transformed.index[target_idx], 'vandalism_score'] = nb.predict_proba(scored_data)[:, nb.classes_]
+            # nb.classes_ is a list of the classes seen by nb.fit, in the order it saw them.
+            # The only two class labels are True and False, so this indexing selects the column
+            # of predict_proba with the probabilities for True, irrespective of whether nb saw
+            # True first or False first.
+        
+        return X_transformed
