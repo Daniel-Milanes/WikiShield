@@ -58,22 +58,7 @@ class VandalismScorer(TransformerMixin, BaseEstimator):
         added = set(re.sub(r"[^\w\s]", " ", str(added_line)).lower().split())
         deleted = set(re.sub(r"[^\w\s]", " ", str(deleted_line)).lower().split())
         return added - deleted
-    
-    def _get_cv_splits(df, labels, cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)):
-        """
-        Helper function to obtain cross-validation splits as disjoint subsets of indices.
 
-        Parameters:
-        df: dataset
-        labels: class labels to stratify with
-        cv: StratifiedKFold instance to call split() on
-
-        Return:
-        cv_splits: a list of length n_splits, where each element is a list of indices.
-        
-        """
-        return [test_idx for _, test_idx in cv.split(df, labels)]
-    
     @_fit_context(prefer_skip_nested_validation=True)
     def fit(
         self, X, labels
