@@ -5,6 +5,9 @@ from sklearn.base import BaseEstimator, TransformerMixin, _fit_context
 import numpy as np
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.model_selection import StratifiedKFold
+from sklearn.naive_bayes import MultinomialNB
+
 
 
 
@@ -35,29 +38,14 @@ class VandalismScorer(TransformerMixin, BaseEstimator):
 
     # This is a dictionary allowing to define the type of parameters.
     # It is used to validate parameters within the `_fit_context` decorator.
-    _parameter_constraints = {"smoothing": [int]}
+    _parameter_constraints = {"smoothing": [int], "n_splits": [int]}
 
-    def __init__(self, smoothing: int = 1) -> None:
+    def __init__(self, smoothing: int = 1, n_splits: int = 4) -> None:
         """
         Initialize the scorer with Laplace smoothing parameter.
         """
         self.smoothing = smoothing
-
-    def _get_words_added(self, added_line: str, deleted_line: str) -> Set[str]:
-        """
-        Extracts the set of words added in the edit by removing punctuation,
-        converting to lowercase, and subtracting deleted words.
-
-        Parameters:
-            added_line (str): Text of the added lines.
-            deleted_line (str): Text of the deleted lines.
-
-        Returns:
-            set: Words present in added_line but not in deleted_line.
-        """
-        added = set(re.sub(r"[^\w\s]", " ", str(added_line)).lower().split())
-        deleted = set(re.sub(r"[^\w\s]", " ", str(deleted_line)).lower().split())
-        return added - deleted
+        self.n_splits = n_splits
 
     @_fit_context(prefer_skip_nested_validation=True)
     def fit(
@@ -75,7 +63,8 @@ class VandalismScorer(TransformerMixin, BaseEstimator):
         """
 
         # `_validate_data` is defined in the `BaseEstimator` class.
-        self.X_ = self._validate_data(X.replace(np.nan, '', accept_sparse=True)
+        # self.X_ = self._validate_data(X.replace(np.nan, ''), accept_sparse=True)
+        self.X_ = X.replace(np.nan, '')
         self.labels_ = labels
 
         self.vectorizer_ = CountVectorizer()
@@ -84,7 +73,7 @@ class VandalismScorer(TransformerMixin, BaseEstimator):
         return self
     
     def transform(
-        self, X, n_splits=4, random_state=42
+        self, X, random_state=42
     ) -> list[float]:
         """
         Compute vandalism scores for new edits based on
@@ -97,17 +86,16 @@ class VandalismScorer(TransformerMixin, BaseEstimator):
         Returns:
             X_transformed: dataset of WP Edits augmented with pred_proba output from Naive Bayes, shape (n_samples, n_features+1). Adds a column called "vandalism_score".
         """
-        X_transformed = X.copy() # In keeping with sklearn API, we don't want to directly modify the input data
+        X_transformed = X.copy().replace(np.nan, '') # In keeping with sklearn API, we don't want to directly modify the input data
 
-        cv = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)
-        cv_splits = self._get_cv_splits(self.X_transformed, self.labels_, cv)
+        cv = StratifiedKFold(n_splits=self.n_splits, shuffle=True, random_state=random_state)
 
         X_counts_added = pd.DataFrame.sparse.from_spmatrix(self.vectorizer_.transform(X_transformed['added_lines']), columns=self.vectorizer_.vocabulary_)
-        X_counts_deleted = pd.DataFrame.sparse.from_spmatrix(bowVectorizer.transform(X_transformed['deleted_lines']), columns=self.vectorizer_.vocabulary_)   
+        X_counts_deleted = pd.DataFrame.sparse.from_spmatrix(self.vectorizer_.transform(X_transformed['deleted_lines']), columns=self.vectorizer_.vocabulary_)   
         X_counts_diff = (X_counts_added - X_counts_deleted).clip(lower=0)
 
         nb = MultinomialNB(fit_prior=False)
-        for train_idx, target_idx in cv.split(self.X_transformed, self.labels_):
+        for train_idx, target_idx in cv.split(X_transformed, self.labels_):
             fit_data = X_counts_diff.iloc[train_idx]
             scored_data = X_counts_diff.iloc[target_idx]
             fit_targets = self.labels_.iloc[train_idx]
