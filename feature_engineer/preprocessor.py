@@ -23,6 +23,9 @@ def preprocessor(df: pd.DataFrame) -> None:
         inplace=True,
     )
 
+    # After dropping rows, reset index so that the indices are consecutive integers from 0 to df.shape[0]-1
+    df.reset_index(drop=True, inplace=True)
+
     df["comment_empty"] = df.apply(comment_empty, axis=1)
     df["account_age"] = df.apply(account_age, axis=1)
     df["is_IP"] = df.apply(is_IP, axis=1)
