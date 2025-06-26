@@ -77,7 +77,7 @@ class VandalismScorer(TransformerMixin, BaseEstimator):
     
     def transform(
         self, X
-    ) -> list[float]:
+    ) -> pd.DataFrame:
         """
         Compute vandalism scores for new edits based on
         learned word probabilities.
@@ -93,14 +93,27 @@ class VandalismScorer(TransformerMixin, BaseEstimator):
 
         cv = StratifiedKFold(n_splits=self.n_splits, shuffle=True, random_state=self.random_state)
 
-        X_counts_added = pd.DataFrame.sparse.from_spmatrix(self.vectorizer_.transform(X_transformed['added_lines']), columns=self.vectorizer_.vocabulary_)
-        X_counts_deleted = pd.DataFrame.sparse.from_spmatrix(self.vectorizer_.transform(X_transformed['deleted_lines']), columns=self.vectorizer_.vocabulary_)   
-        X_counts_diff = (X_counts_added - X_counts_deleted).clip(lower=0)
+        # X_counts_added = pd.DataFrame.sparse.from_spmatrix(self.vectorizer_.transform(X_transformed['added_lines']), columns=self.vectorizer_.vocabulary_)
+        # X_counts_deleted = pd.DataFrame.sparse.from_spmatrix(self.vectorizer_.transform(X_transformed['deleted_lines']), columns=self.vectorizer_.vocabulary_)   
+        # X_counts_diff = (X_counts_added - X_counts_deleted).clip(lower=0)
+        
+        # For memory efficiency, we'll work directly with scipy sparse matrices
+        # instead of creating intermediate pandas sparse DataFrames.
+        X_counts_added = self.vectorizer_.transform(X_transformed['added_lines'])
+        X_counts_deleted = self.vectorizer_.transform(X_transformed['deleted_lines'])
+
+        # Subtract matrices and clip at 0 (we only care about added words).
+        # .maximum(0) is an efficient way to do this with sparse matrices.
+        X_counts_diff = (X_counts_added - X_counts_deleted).maximum(0)
+        X_counts_diff.eliminate_zeros()
+
+        # Initialize the score column to be filled during cross-validation.
+        X_transformed['vandalism_score'] = np.nan
 
         nb = self.nb_
         for train_idx, target_idx in cv.split(X_transformed, self.labels_):
-            fit_data = X_counts_diff.iloc[train_idx]
-            scored_data = X_counts_diff.iloc[target_idx]
+            fit_data = X_counts_diff[train_idx]
+            scored_data = X_counts_diff[target_idx]
             fit_targets = self.labels_.iloc[train_idx]
 
             nb.fit(fit_data, fit_targets)

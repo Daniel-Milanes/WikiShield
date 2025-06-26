@@ -1,10 +1,9 @@
 import pandas as pd
-from feature_engineer import (
-    is_IP,
-    account_age,
-    comment_empty,
-    word_count,
-)
+
+from .account_age import account_age
+from .comment_empty import comment_empty
+from .is_ip import is_IP
+from .word_count import word_count
 
 
 def preprocessor(df: pd.DataFrame) -> None:
