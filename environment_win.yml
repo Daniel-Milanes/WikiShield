@@ -7,7 +7,7 @@ dependencies:
   - libffi=3.4.4
   - openssl=3.0.16
   - pip=25.1
-  - python=3.10.16
+  - python>=3.11.12
   - setuptools=78.1.1
   - sqlite=3.45.3
   - tk=8.6.14
@@ -27,6 +27,8 @@ dependencies:
   - pmdarima >= 2.0
   - interpret
   - pip:
+      - catboost
+      - interpret
       - asttokens==3.0.0
       - autopep8==2.3.2
       - black==25.1.0
@@ -46,6 +48,7 @@ dependencies:
       - mypy-extensions==1.1.0
       - nbqa==1.9.1
       - nodeenv==1.9.1
+      - optuna==4.4.0
       - packaging==25.0
       - parso==0.8.4
       - pathspec==0.12.1
@@ -70,4 +73,3 @@ dependencies:
       - wikipedia-api==0.8.1
       - plotly == 5.24.0
       - seaborn == 0.13.2
-

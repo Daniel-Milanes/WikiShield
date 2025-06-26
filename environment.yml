@@ -49,6 +49,7 @@ dependencies:
       - mypy-extensions==1.1.0
       - nbqa==1.9.1
       - nodeenv==1.9.1
+      - optuna==4.4.0
       - packaging==25.0
       - parso==0.8.4
       - pathspec==0.12.1
