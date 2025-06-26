@@ -28,6 +28,7 @@ dependencies:
   - xgboost = 2.1.4
   - pmdarima >= 2.0
   - pip:
+      - catboost
       - interpret
       - asttokens==3.0.0
       - autopep8==2.3.2
