@@ -19,20 +19,6 @@ class VandalismScorer(TransformerMixin, BaseEstimator):
     Implementation of class based on the template implementation given at
     https://github.com/scikit-learn-contrib/project-template/blob/main/skltemplate/_template.py
     (template file as of June 25, 2025)
-
-    Parameters
-    ----------
-    smoothing : int, default=1
-        Smoothing parameter for Laplace smoothing.
-    
-    Attributes
-    ----------
-    vandalism_counts_ : defaultdict(int)
-        Dictionary to store counts of words in vandalism edits.
-    constructive_counts_ : defaultdict(int)
-        Dictionary to store counts of words in constructive edits.
-    word_probs_ : dict
-        Dictionary to store probabilities of words in vandalism edits.
     
     """
 
