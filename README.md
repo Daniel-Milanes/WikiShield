@@ -1,4 +1,6 @@
-An active community of volunteer editors on Wikipedia ensures that instances of outright vandalism get reverted relatively quickly, but often legitimate-looking disinformation can remain undetected for a long time, in some cases for 10+ years! (see e.g. this list of hoax articles or this list of instances of citogenesis)
+# WikiShield - a guard against vandalism on Wikipedia
+
+As a source of information, Wikipedia tends to be fairly reliable for a first pass on a new subject. an open knowledge repository edited and maintained by its users that has rightfully earned its place as the first stop for anyone seeking 
 
 This project aims to create a model that can look at a Wikipedia article and classify it as legitimate or as a possible hoax. Potentially useful data includes the text of the article, the frequency of inline citations, the text of the references cited, pageview analytics and edit history of the article, and user history of the editors responsible for the article.
 
