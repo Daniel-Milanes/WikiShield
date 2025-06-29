@@ -10,7 +10,7 @@ Our dataset comes from the training data of ClueBot NG (https://github.com/clueb
 
 # Feature engineering
 
-Features directly available from ClueBot dataset: 
+**Features directly available from ClueBot dataset:** 
 [
     "user_edit_count",
     "user_distinct_pages",
@@ -32,6 +32,7 @@ Features directly available from ClueBot dataset:
 ]
 
 **Features engineered in the first round using other information from ClueBot dataset and "added_lines", "deleted_lines":**
+
 [
     "account_age",
     "comment_empty",
@@ -40,7 +41,7 @@ Features directly available from ClueBot dataset:
     "word_count_deleted",
 ]
 
-Each of our models is a pipeline that starts with a vandalism score calculator (we do this to avoid data leakage and overfitting in cross-validations). We put all the features into our model pipeline: 
+Each of our models is a pipeline that starts with a vandalism score calculator (we do this to avoid data leakage and overfitting in cross-validations). **We put all the features into our model pipeline:** 
 
 [
     "user_edit_count",
@@ -61,6 +62,11 @@ Each of our models is a pipeline that starts with a vandalism score calculator (
     "deleted_lines"
 ]
 
-Here, “EditID” is technically not a feature, but our vandalism score calculator needs it for indexing purposes. The last three features ("EditID", "added_lines", "deleted_lines") will be combined as the vandalism score. After the vandalism scores are calculated, these three features are dropped and will not go into later parts of the model. The newly engineered feature vandalism score is added and will be considered in later parts of the pipeline.
+Here, “EditID” is technically not a feature, but our vandalism score calculator needs it for indexing purposes. The last three features ("EditID", "added_lines", "deleted_lines") will be combined as the **vandalism score**. After the vandalism scores are calculated, these three features are dropped and will not go into later parts of the model. The newly engineered feature vandalism score is added and will be considered in later parts of the pipeline.
 
 # Model
+
+We have a list of models (all with tuned hyperparameters). With accuracy, precision, recall, and F1 scores all considered, we chose to use a voting classifier that combines three gradient boosting models (CatBoost, LightGBM, XGBoost).
+
+<img width="882" alt="Image20250628230222" src="https://github.com/user-attachments/assets/70626720-cf02-4379-be8d-15449352bbe1" />
+
