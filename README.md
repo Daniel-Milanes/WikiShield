@@ -12,6 +12,30 @@ Our dataset comes from the training data of ClueBot NG (https://github.com/clueb
 
 Features from ClueBot dataset:...
 Features from API:...
+
+All features that go into our model pipeline: 
+
+[
+    "user_edit_count",
+    "user_distinct_pages",
+    "user_warns",
+    "num_recent_edits",
+    "num_recent_reversions",
+    "num_edits_5d_before",
+    "account_age",
+    "word_count_added",
+    "word_count_deleted",
+    "comment_empty",
+    "is_IP",
+    "current_minor",
+    "is_person",
+    "EditID",
+    "added_lines",
+    "deleted_lines"
+]
+
+Some of these features will be combined as the vandalism score.
+
 Vandalism score:...
 Final features:...
 
