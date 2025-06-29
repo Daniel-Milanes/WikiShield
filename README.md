@@ -10,10 +10,37 @@ Our dataset comes from the training data of ClueBot NG (https://github.com/clueb
 
 # Feature engineering
 
-Features from ClueBot dataset:...
-Features from API:...
+Features directly available from ClueBot dataset: 
+[
+    "user_edit_count",
+    "user_distinct_pages",
+    "user_warns",
+    "num_recent_edits",
+    "num_recent_reversions",
+    "num_edits_5d_before",
+    "current_minor",
+    "EditID",
+]
 
-All features that go into our model pipeline: 
+**Features from API:**
+
+[
+    "num_edits_5d_before",
+    "added_lines",
+    "deleted_lines"
+    "is_person"
+]
+
+**Features engineered in the first round using other information from ClueBot dataset and "added_lines", "deleted_lines":**
+[
+    "account_age",
+    "comment_empty",
+    "is_IP",
+    "word_count_added",
+    "word_count_deleted",
+]
+
+Each of our models is a pipeline that starts with a vandalism score calculator (we do this to avoid data leakage and overfitting in cross-validations). We put all the features into our model pipeline: 
 
 [
     "user_edit_count",
@@ -34,9 +61,6 @@ All features that go into our model pipeline:
     "deleted_lines"
 ]
 
-Some of these features will be combined as the vandalism score.
-
-Vandalism score:...
-Final features:...
+Here, “EditID” is technically not a feature, but our vandalism score calculator needs it for indexing purposes. The last three features ("EditID", "added_lines", "deleted_lines") will be combined as the vandalism score. After the vandalism scores are calculated, these three features are dropped and will not go into later parts of the model. The newly engineered feature vandalism score is added and will be considered in later parts of the pipeline.
 
 # Model
