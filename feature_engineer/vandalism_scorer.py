@@ -77,9 +77,12 @@ class VandalismScorer(TransformerMixin, BaseEstimator):
         X_counts_added = self.vectorizer_.transform(self.X_train_['added_lines'])
         X_counts_deleted = self.vectorizer_.transform(self.X_train_['deleted_lines'])
 
-        # Subtract matrices and clip at 0 (we only care about added words).
+        # Subtract matrices to get net words added.
+        # If result has negative values, those are net words deleted. 
+        # We remove net words deleted by clipping at 0.
         # .maximum(0) is an efficient way to do this with sparse matrices.
         X_counts_diff = (X_counts_added - X_counts_deleted).maximum(0)
+        # Compress the sparse matrix by removing zeros.
         X_counts_diff.eliminate_zeros()
 
         # Train nb_classifier_total on all of X_train_
