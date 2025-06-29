@@ -4,13 +4,28 @@ As a source of information, Wikipedia tends to be fairly reliable for a first pa
 
 However, occasionally there are vandalism edits made on Wikipedia, by which we mean edits that are done in an intentionally disruptive or malicious manner. This could involve inserting unpleasant language, non-sequiturs or obvious misinformation. Vandalism harms both the credibility of Wikipedia and diminishes its user experience. It could also pollute downstream platforms that rely on Wikipedia to summarize information. This project presents a machine learning model designed to accurately and efficiently detect vandalism edits on Wikipedia.
 
+# Repo guide
+
+The **data** directory contains our trainining and testing data, together with the Python scripts we used to preview the data files and call the APIs. See the README there for further explanations to the scripts.
+
+The **feature_engineer** directory holds our scripts for feature engineering. The details of the features can be found below. 
+
+The **EDA** directory is about exploratory data analysis. We produced various figures to analyze the features. 
+
+The **models** directory collects all of our models, from baselines to the final flagship.
+
+The **results** directory gives the result summary of all the models we considered, including our flagship.
+
+The **checkpoint** directory stores some of our reports submitted during the project.
+
 # Data collection
 
-Our dataset comes from the training data of ClueBot NG (https://github.com/cluebotng), a well-established anti-vandalism bot. We further enrich the dataset using the MediaWiki and Wikidata APIs to gather additional features, including the actual content of the edit, the recent number of edits to the article, and the category of the article subject. The data files and scripts are contained in the "data" directory. See the README there for further explanations to the scripts.
+Our dataset comes from the training data of ClueBot NG (https://github.com/cluebotng), a well-established anti-vandalism bot. We further enrich the dataset using the MediaWiki and Wikidata APIs to gather additional features, including the actual content of the edit, the recent number of edits to the article, and the category of the article subject.
 
 # Feature engineering
 
 **Features directly available from ClueBot dataset:** 
+
 [
     "user_edit_count",
     "user_distinct_pages",
